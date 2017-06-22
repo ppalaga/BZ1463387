@@ -1,0 +1,87 @@
+RULE say I am here
+CLASS org.jboss.modules.Main
+METHOD main
+AT ENTRY
+IF TRUE
+DO
+  System.out.println("Byteman is here");
+ENDRULE
+
+
+
+#RULE check method handleDataReceived
+#CLASS UNICAST2
+#METHOD handleDataReceived
+#AT ENTRY
+#IF TRUE
+#DO System.out.println("************** BYL SPUSTEN handleDataReceived ");
+#new Throwable().getCause();
+#ENDRULE
+
+#RULE print Row Count
+#CLASS UNICAST2
+#METHOD handleDataReceived
+#AFTER INVOKE up
+#IF TRUE
+#DO System.out.println("************** BYL SPUSTEN handleDataReceived ");
+#new Throwable().getCause();
+#ENDRULE
+
+#RULE check method getLength
+#CLASS UNICAST2
+#METHOD handleDataReceived
+#AFTER INVOKE getLength
+#IF TRUE
+#DO System.out.println("************** BYL SPUSTEN getLength ");
+#ENDRULE
+
+RULE check method handleDataReceived-up
+CLASS UNICAST2
+METHOD handleDataReceived
+AFTER INVOKE up
+IF TRUE
+DO
+System.out.println("************** WAS EXECUTED handleDataReceived.up ");
+#throw new java.lang.IllegalArgumentException("whaaaaaaaaa");
+#$0.log.error("couldn't deliver OOB message " + $msg, $t);
+ENDRULE
+
+
+#RULE check method up1
+#CLASS UNICAST2
+#METHOD up
+#AT ENTRY
+#IF TRUE
+#DO
+#System.out.println("************** BYL SPUSTEN up ");
+#throw new java.lang.IllegalArgumentException("whaaaaaaaaa");
+#ENDRULE
+
+
+RULE check method up2
+CLASS ^Protocol
+METHOD up
+AT ENTRY
+IF callerEquals("handleDataReceived")
+DO
+System.out.println("************** WAS EXECUTED up after  handleDataReceived");
+throw new java.lang.IllegalArgumentException("whaaaaaaaaa");
+ENDRULE
+
+#RULE check method up2
+#CLASS UNICAST2
+#METHOD up
+#AT ENTRY
+#IF (readCounter(null)>0)
+#DO decrementCounter(null);
+#System.out.println("************** BYL SPUSTEN real up2 " + readCounter(null));
+#throw new java.lang.IllegalArgumentException("whaaaaaaaaa");
+#ENDRULE
+
+#RULE check method compareAndSet
+#CLASS UNICAST2
+#METHOD handleDataReceived
+#AFTER INVOKE compareAndSet
+#IF TRUE
+#DO System.out.println("************** BYL SPUSTEN compareAndSet ");
+#ENDRULE

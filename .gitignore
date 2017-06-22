@@ -1,0 +1,25 @@
+
+# Eclipse
+.project
+.classpath
+.settings/
+bin/
+
+# IDEA
+.idea
+*.ipr
+*.iml
+*.iws
+
+# NetBeans
+nb-configuration.xml
+
+# KDE
+.directory
+
+# OSX
+.DS_Store
+
+/clusterbench-ee7.ear
+/node1/
+/node2/

@@ -1,0 +1,51 @@
+
+= Steps to reproduce
+
+[source,sh]
+----
+# Clone this repo
+cd ~/scratch
+git clone https://github.com/ppalaga/BZ1463387.git
+
+# Define working directories
+cd BZ1463387
+thisDir="$(pwd)"
+wfSrcDir="${thisDir}/../../jboss-eap"
+BYTEMAN_HOME="$HOME/bin/byteman-download-3.0.10"
+
+# Build the container
+cd "${wfSrcDir}"
+mvn clean install -DskipTests
+
+
+# Create two nodes
+
+qChar='"'
+btmLine="
+JAVA_OPTS=${qChar}\${JAVA_OPTS} -Dorg.jboss.byteman.transform.all -javaagent:${BYTEMAN_HOME}/lib/byteman.jar=script:${thisDir}/BZ1463387.btm,boot:${BYTEMAN_HOME}/lib/byteman.jar${qChar}
+"
+if [ ! -f "${thisDir}/clusterbench-ee7.ear" ]; then
+    curl http://download.eng.brq.redhat.com/scratch/jbilek/clusterbench-ee7.ear > "${thisDir}/clusterbench-ee7.ear"
+fi
+
+node="node1"
+rm -Rf "${thisDir}/${node}"
+mkdir "${thisDir}/${node}"
+cp -R -t "${thisDir}/${node}" "${wfSrcDir}"/build/target/jboss-*/*
+echo "${btmLine}" >> "${thisDir}/${node}/bin/standalone.conf"
+cp -t "${thisDir}/${node}/standalone/deployments" "${thisDir}/clusterbench-ee7.ear"
+
+node="node2"
+rm -Rf "${thisDir}/${node}"
+mkdir "${thisDir}/${node}"
+cp -R -t "${thisDir}/${node}" "${wfSrcDir}"/build/target/jboss-*/*
+echo "${btmLine}" >> "${thisDir}/${node}/bin/standalone.conf"
+cp -t "${thisDir}/${node}/standalone/deployments" "${thisDir}/clusterbench-ee7.ear"
+
+
+# Run node1
+${thisDir}/node1/bin/standalone.sh -Djboss.node.name=node1 -c standalone-full-ha.xml
+
+# Run node2 in a separate console
+${thisDir}/node2/bin/standalone.sh -Djboss.node.name=node2 -c standalone-full-ha.xml -Djboss.socket.binding.port-offset=100
+----
